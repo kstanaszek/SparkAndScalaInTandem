@@ -2,6 +2,7 @@ import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.expressions.Window
 
 object zJavaDemo extends Logger with App {
+
   val spark: SparkSession = SparkSession.builder
     .master("local[*]")
     .appName("zJava: Spark with Scala Analytics")
@@ -12,33 +13,31 @@ object zJavaDemo extends Logger with App {
   final case class Character(Id: String, PrimaryName: String, AlternativeName: String) {
   }
 
-  val charactersDs = spark.read
-    .option("header", "true")
-    .option("inferSchema", "true")
+  val characters = spark.read
+    .option("header", true)
+    .option("inferSchema", true)
     .csv(getClass.getResource("/Tolkien/characters.csv").toString)
     .as[Character]
 
-  val charactersArray = charactersDs.map(row => row.Id).collect()
+  val charactersKeywords = characters.map(row => row.Id).collect()
 
   val fileContents = spark.sparkContext.wholeTextFiles(getClass.getResource("/Tolkien/scripts").toString)
 
   val wordFileNameOnes = fileContents.flatMap{ case (filePath, fileContent) =>
     val fileName = filePath.split("/").last
 
-    val words = fileContent.split("""\W+""")
+    fileContent.split("""\W+""")
       .map(word => word.toLowerCase)
-      .filter(charactersArray.contains(_))
-
-    words.map(word => ((word, fileName), 1))
+      .filter(charactersKeywords.contains(_))
+      .map(word => ((word, fileName), 1))
 
   }.reduceByKey((count1, count2) => count1 + count2)
 
-  val wordGroups = wordFileNameOnes.map {
+  val wordGroups = wordFileNameOnes.map{
     case ((word, fileName), count) => (word, (fileName, count))
   }.groupByKey
 
   val wordTotalCountAndReferences = wordGroups.map { case (word, iterable) =>
-
     val vect = iterable.toVector.sortBy {
       case (fileName, count) => (-count, fileName)
     }
@@ -54,7 +53,7 @@ object zJavaDemo extends Logger with App {
   import org.apache.spark.sql.functions._
 
   val results = resultsBook
-    .join(charactersDs, resultsBook("Character") === charactersDs("Id"))
+    .join(characters, $"Character" === $"Id")
     .select($"PrimaryName", $"Character", $"TotalCount", $"References")
     .groupBy($"PrimaryName".as("Character"))
     .agg(sum($"TotalCount").as("TotalCount"), collect_list($"Character").as("Keywords"), collect_list($"References").as("References"))
