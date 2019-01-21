@@ -1,5 +1,4 @@
 import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.expressions.Window
 
 object zJavaDemo extends Logger with App {
 
@@ -8,10 +7,10 @@ object zJavaDemo extends Logger with App {
     .appName("zJava: Spark with Scala Analytics")
     .getOrCreate()
 
-  import spark.implicits._
-
   final case class Character(Id: String, PrimaryName: String, AlternativeName: String) {
   }
+
+  import spark.implicits._
 
   val characters = spark.read
     .option("header", true)
@@ -47,10 +46,13 @@ object zJavaDemo extends Logger with App {
     (word, totalCount, vect.map(v => s"${v._1}:${v._2}"))
   }
 
+  import org.apache.spark.sql.functions._
+
   val resultsBook = wordTotalCountAndReferences
     .toDF("Character", "TotalCount", "References")
 
-  import org.apache.spark.sql.functions._
+
+  import org.apache.spark.sql.expressions.Window
 
   val results = resultsBook
     .join(characters, $"Character" === $"Id")
@@ -60,6 +62,7 @@ object zJavaDemo extends Logger with App {
     .withColumn("Ranking", row_number().over(Window.orderBy($"TotalCount".desc)))
     .select($"Ranking", $"Character", $"Keywords", $"TotalCount", $"References")
     .show(100, false)
+
 
 
   //results.createOrReplaceTempView("results")
