@@ -1,15 +1,13 @@
 
 object CaseClasses extends App {
 
-  case class Character(PrimaryName: String, hasARing: Boolean) {
+  case class Character(Id: String, PrimaryName: String, AlternativeName: String, hasRing: Boolean) {
   }
 
-  val h = Character("Frodo Baggins", true)
-
-  val whoHasARing = h match {
-    case Character(x, true) => s"$x has a ring"
-    case Character(x, false) => s"$x does not have a ring"
+  val myCharacter = Character("frodo", "Frodo Baggins", "Mr. Underhill", true)
+  val whoHasRing = myCharacter match {
+    case Character(x, y, z, true) => s"$y has a ring"
+    case _ => "Don't know"
   }
-
-  println(whoHasARing)
+  println(whoHasRing)
 }

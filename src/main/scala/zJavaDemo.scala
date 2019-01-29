@@ -1,3 +1,4 @@
+import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 
 object zJavaDemo extends Logger with App {
@@ -22,7 +23,7 @@ object zJavaDemo extends Logger with App {
 
   val fileContents = spark.sparkContext.wholeTextFiles(getClass.getResource("/Tolkien/scripts").toString)
 
-  val wordFileNameOnes = fileContents.flatMap{ case (filePath, fileContent) =>
+  val wordFileNameOnes: RDD[((String, String), Int)] = fileContents.flatMap { case (filePath, fileContent) =>
     val fileName = filePath.split("/").last
 
     fileContent.split("""\W+""")
@@ -32,7 +33,7 @@ object zJavaDemo extends Logger with App {
 
   }.reduceByKey((count1, count2) => count1 + count2)
 
-  val wordGroups = wordFileNameOnes.map{
+  val wordGroups: RDD[(String, Iterable[(String, Int)])] = wordFileNameOnes.map{
     case ((word, fileName), count) => (word, (fileName, count))
   }.groupByKey
 
