@@ -7,6 +7,5 @@ object Implicits extends App {
   val myval: Int = 1
 
   println(myval addOne)
-
 }
 
