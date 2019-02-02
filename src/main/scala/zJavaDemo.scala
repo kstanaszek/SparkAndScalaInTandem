@@ -8,7 +8,7 @@ object zJavaDemo extends Logger with App {
     .appName("zJava: Spark with Scala Analytics")
     .getOrCreate()
 
-  final case class Character(Id: String, PrimaryName: String, AlternativeName: String) {
+  case class Character(Id: String, PrimaryName: String, AlternativeName: String) {
   }
 
   import spark.implicits._
@@ -21,7 +21,11 @@ object zJavaDemo extends Logger with App {
 
   val charactersKeywords = characters.map(row => row.Id).collect()
 
-  val fileContents = spark.sparkContext.wholeTextFiles(getClass.getResource("/Tolkien/scripts").toString)
+  val fileContents: RDD[(String, String)] = spark.sparkContext.wholeTextFiles(getClass.getResource("/Tolkien/scripts").toString)
+
+  fileContents.mapValues(_.split("""\W+"""))
+    .mapValues(_.size)
+    .map{case (_, count) => count}.reduce(_+_)
 
   val wordFileNameOnes: RDD[((String, String), Int)] = fileContents.flatMap { case (filePath, fileContent) =>
     val fileName = filePath.split("/").last
