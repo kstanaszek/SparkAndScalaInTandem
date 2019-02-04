@@ -1,5 +1,6 @@
 ## Directory-based project format
 .idea/
+~$slides.pptx
 
 ## File-based project format
 *.iml
