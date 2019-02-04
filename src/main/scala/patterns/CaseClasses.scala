@@ -8,6 +8,6 @@ object CaseClasses extends App {
     case MyCharacter(x, true) => s"$x has a ring"
     case _ => "Don't know"
   }
-  println(whoHasRing)
+
 }
 
